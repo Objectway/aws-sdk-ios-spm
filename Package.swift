@@ -17,7 +17,7 @@ enum BuildMode {
 let localPath = "XCF"
 
 // The published package uses the XCFrameworks from the GitHub Release.
-let buildMode = BuildMode.remote
+let buildMode = BuildMode.localWithFilesystem
 
 // Checksums for the custom XCFramework ZIP artifacts.
 //
