@@ -3,14 +3,10 @@ import PackageDescription
 import class Foundation.FileManager
 import struct Foundation.URL
 
-// Current stable version of the AWS iOS SDK
-//
-// This value will be updated by the CI/CD pipeline and should not be
-// updated manually
-let latestVersion = "2.41.0"
+// Custom AWS iOS SDK version
+let latestVersion = "2.41.0-custom.1"
 
-// Hosting url where the release artifacts are hosted.
-let hostingUrl = "https://releases.amplify.aws/aws-sdk-ios/"
+let hostingUrl = "https://github.com/Objectway/aws-sdk-ios-spm/releases/download/v\(latestVersion)/"
 
 enum BuildMode {
     case remote
@@ -19,62 +15,63 @@ enum BuildMode {
 }
 
 let localPath = "XCF"
+
+// The published package uses the XCFrameworks from the GitHub Release.
 let buildMode = BuildMode.remote
 
-// Map between the available frameworks and the checksum
+// Checksums for the custom XCFramework ZIP artifacts.
 //
-// The checksum value will be updated by the CI/CD pipeline and should
-// not be updated manually
+// These checksums correspond to the ZIP files generated from the
+// custom XCFrameworks built from the forked aws-sdk-ios repository.
 let frameworksToChecksum = [
-    "AWSAPIGateway": "0758bee99cc91299d667eb3efbf17dd6c5bc3d32dd460d44d7e8dbc30bc82f1c",
-    "AWSAppleSignIn": "07cba9e2138ec98d0b8d70f21c9ae812cfca65dabb72fea50c011bb21ac8fada",
-    "AWSAuthCore": "4a6cc38b908282dbadc534efa5e342babf0830a74f492486db66485e0d6a48eb",
-    "AWSAuthUI": "2af24e2fa30984b87b984d6d6bf77b2cc64d3f9b449436c073478c1342b6505f",
-    "AWSAutoScaling": "01a2b1290c0958b424022c0577d0c929a94d3547cdeb476b21bfd07aeb602bef",
-    "AWSChimeSDKIdentity": "b3fd2e6042f1ae2ac372cc669905c537e7b580ecb6919aab89f6158b198832dc",
-    "AWSChimeSDKMessaging": "29250e734fde1f13e0a9203da3cceea1fc5ce84d562028d601db5ca16fe93e01",
-    "AWSCloudWatch": "8eebeac0455941d32005f6833b19dcdcba6b8e8f602e75de5f279d9a5fe336d4",
-    "AWSCognitoAuth": "a920cae18da05be6aa4b62a9c184dfaf36285cd8262dca2bfa428482f688df5c",
-    "AWSCognitoIdentityProvider": "bedd65dca74dd4fdf649b9d29c31e74637f839c0f73e63999d30ca675973f792",
-    "AWSCognitoIdentityProviderASF": "1171b85fc49464118b8bca6c9cfb529805eb207f4efc63e1127370dba5d11a30",
-    "AWSComprehend": "969e7572d246ad2a87ba06211ac34c28b6fde837b6525bb47b1a6ac9ab87fe3e",
-    "AWSConnect": "4d56f833d37c31ea3fa653d5cc32b52c6bd16da2bf833880d20852558be15828",
-    "AWSConnectParticipant": "51287068e6faeda5240563354939001e302694556240e4a4b374667e5c4d8f88",
-    "AWSCore": "8a42c3da7efdc47b7b7e40a3cac0f1c29bc7bd0020d630fc1bd31e29caffdb3c",
-    "AWSDynamoDB": "e229c40dcd8f9e516f1da045a3ac23d001a53d217f9af6421bbce320a9b978cf",
-    "AWSEC2": "3b44e7af8950509ada99de3dc69659dab0d75a224f37c888810cade48bfed10e",
-    "AWSElasticLoadBalancing": "bbd3e570b07569a353a53171a6a684d44045259f13a4e46627bf342222a6c34d",
-    "AWSFacebookSignIn": "1c39bbf5f19db61f0e8d5ad4c69af968fb58b486a78b243d465cc3c60c3e1f2d",
-    "AWSGoogleSignIn": "7054b1dcbba18ab7cca253de0b64ba7cac9698c963b0ccbcf311280b9502b547",
-    "AWSIoT": "e563b9e9c1bdefad41bfecaddd4bd1002cb26d7d5fe9fcf8931234fbdd9a2255",
-    "AWSKMS": "4d8232c3634e18064472f9a19a92163a718bb1a6695bf19fc1bb008dbbf0c402",
-    "AWSKinesis": "1c24ba5ab0d323f06c41f0eb8929e080a9d72c4c8ca71208c2ec2d8a3a36c902",
-    "AWSKinesisVideo": "a909c4e29d65b3c7188975ecfd8b1de3727c927f9278c7d8a9bd19585fe1e516",
-    "AWSKinesisVideoArchivedMedia": "476c0f55b35cf6ec86f23a73a81aae2acba648085ef825e14de3ebce7799fbc7",
-    "AWSKinesisVideoSignaling": "dd4f4b80e9cfa08c47f744df4bf5d69256eb63bf0db1e4aedd9d4ffaa53234bd",
-    "AWSKinesisVideoWebRTCStorage": "006eaa2bd14f5c154f75b00632fd0b7e9d414df653b3c64eaaba6da7329ac579",
-    "AWSLambda": "789ce5058ebfa67dcd124d32ef3a371f370a450339b48cf4e71274e8a244a328",
-    "AWSLex": "49b7c01c8844f35f6bd0f863a18e3ae783f47d6b4f88273c9e7e4847f8b1b456",
-    "AWSLocationXCF": "4faf40a5e01edcbaf5ae055ee7e39c6cc412ec9cbda7e8f79f68d768919d6732",
-    "AWSLogs": "7c1d9386a69dbc6219eab60ba5ac0f55d09148fe76d3a9a6198cc0a30b774581",
-    "AWSMachineLearning": "967988a338dda0364bffd0283f6410bb1fa3719981ea0aa7413f0b16733331b1",
-    "AWSMobileClientXCF": "f7c99e4d1047782648a1d84e43675b4452055a86cc19b3aa30dbcb0b61d64383",
-    "AWSPinpoint": "3e2822d923f3e441e657c682a20a9ad3ebaa629676d2a172dbbc75f5396a6fab",
-    "AWSPolly": "d885974c33d44236e385a399c55925d194dd105b9295c206502fe887952b5c9a",
-    "AWSRekognition": "65894cf42538a9e6a7ce557f5993ca0c19b2e29f2cf864c4d5a5ff05d25a5aff",
-    "AWSS3": "bb017dd3726ef20443c4bdfd171f852c35215939e751a0f8cf53c0c891df74f9",
-    "AWSSES": "2cc3aaebea456ab3ae05825d03bc0090d71aa96eb8ccf131c4ba7b89e01b5098",
-    "AWSSNS": "2fd65f7749498a8da2ca04d199af82022cc68e152231aa111727217a2d6e8e87",
-    "AWSSQS": "6141c8ca77bbeffab283c120694f28647b68743216c0725a90cbe90fda144b7f",
-    "AWSSageMakerRuntime": "1d71f5b08a5c3a50f01b76e639e3e2102de3ec5f36b1434f6266b3f022329338",
-    "AWSSimpleDB": "36a8012646bf3442d0b70d2fadbeac81623a501215eb10bf5f06359ec6305407",
-    "AWSTextract": "835d4e9ca194c3e1e9aad6ddc72b3a33b3c2e32904f97cd47bf6f17285ea1a14",
-    "AWSTranscribe": "bb8d63289a66430cda69b84cf51a472b55db3544ea99aad1d0027fb4bc51cbcd",
-    "AWSTranscribeStreaming": "69706894ace1e2586bb09fe3eba4b4d216c325c4d4bc1a3e24662f71263c20c1",
-    "AWSTranslate": "2b9455a2c750fbb651294967908c9fc22dd4036e30e8dcc601cd25736e4248e3",
-    "AWSUserPoolsSignIn": "fcb227126239c3142a57571659d715cabe9cb4c57919cbf89c90447b575e82c9"
+    "AWSAPIGateway": "9f5bbaec960f2159d63d79e5a193f2b50e6a35507c34026e5cee1cc445ecca75",
+    "AWSAppleSignIn": "f54a6c1453a70508c33a335aad1bd6cc83d0bb1a35cdb958fd5c4a2e03c74036",
+    "AWSAuthCore": "8c8406c27bd9890b3edfd0b5606051d2245e53567254d31d41b935ac44911bed",
+    "AWSAuthUI": "42c0a20922de96029704f92aac7131e7d7a6b9afcbf6a1e6323ed558d5a8aec6",
+    "AWSAutoScaling": "586168af28a053b330949df465f97f47cea7abaf7c817778c2a9ebb444636d83",
+    "AWSChimeSDKIdentity": "31afb899ff14afbf8b6bf764e65a3371ab4a251dbc24c676d77d91c7caf55e95",
+    "AWSChimeSDKMessaging": "5cf12f8f84d3f258d7a28f7af39d9faf2785acaf1d8f7cbed22c861cd9b244b2",
+    "AWSCloudWatch": "911a5583f8e537e986f31a5266038f74a63105c758e64522e20f6976a7f45480",
+    "AWSCognitoAuth": "e62721275ae8ebb8e046674105688a6e43da7d1eabf579b973061c2f2c337e63",
+    "AWSCognitoIdentityProvider": "fed5c8cf01dc6d86155d6c15ad3ce658edad40577c42cdd657d3ad246770c3f1",
+    "AWSCognitoIdentityProviderASF": "31b3ac76f9b294cb54d6ea869d836152f11ba9b11e44aad29b76eed2939546b5",
+    "AWSComprehend": "db35cd846c503bbbcf3fa7839c180a6fb8a956eedde2b085451b2db66966e990",
+    "AWSConnect": "f081b9246d41e9f6d3b9b11ac71b4117fc47095a2506369d79d33082cd13c0f0",
+    "AWSConnectParticipant": "db35c6ee15b9e5c64a4de5ea21f0f0561ee5f65491672770d2109c83a10d199e",
+    "AWSCore": "48a0211d703d4074ad26e216dcdc4fddcd8171ce31d6250c9c77848da00b0e47",
+    "AWSDynamoDB": "5b4f8249727698ccb18d96a1ee3e1325f14714bab3b769bcf55e38d009ff340b",
+    "AWSEC2": "e5dc3870855a083490f69bc3360105857e0913a5568fc6fa8f5b79ebc1007b4c",
+    "AWSElasticLoadBalancing": "80f2d485dbbf2a5d2f7a3ef4024f2e8bf46a241855d121c34c4dc25855060bc5",
+    "AWSFacebookSignIn": "aa211aff33139982e04b4537d327433a7894e24c415ed598df8f34bc44760a4a",
+    "AWSGoogleSignIn": "4ced7d5ed9692b773877e58e8c7eb2be39d3a6e73d7c2953af9dd4a3385d0318",
+    "AWSIoT": "92e970ef2dd7539416ec994019a879d3ce96d655f2a41d4d087e2fd2d73e5731",
+    "AWSKinesis": "553bc4f3c6547612acd098fd76ee0398d3f4793a587acbb4bb1e7c2b18f6585d",
+    "AWSKinesisVideo": "b24e39347ebe1fca460586f917f4ecab435982cc5a8b93e2b8b8ac5938936e9d",
+    "AWSKinesisVideoArchivedMedia": "d04b763e659b9dcf54d8707f69843ea08339561998f8a5bb768d34f47bd81c8c",
+    "AWSKinesisVideoSignaling": "fe3ffd62d9e1019606b36c602dcc7f4bb0cedd40566b0954abd677a59e635afc",
+    "AWSKinesisVideoWebRTCStorage": "9506065098943dfbecadea9f49017302cdd3a636b3eb7f83cbe870b756c2a609",
+    "AWSKMS": "0645c84feea9262187b504edf798b0d6674cd54e126e36fb83e39218f220de5b",
+    "AWSLambda": "c6f9b1cf397f08fcd1097d74fa2d4951aec971a54b7acec82daa169602c59468",
+    "AWSLex": "cf7a6599c9d87127d5cc946021c9a970d8536a11c0d4464d7c72d3327ab55613",
+    "AWSLocationXCF": "61c8b8a0ea04e3b01de9fc0ffa84602d41b6f9e90a38e6bb732175761e206294",
+    "AWSLogs": "5a17f090b82e43a9526de50c7300a078fa213c033edb22a3f82f67553a649526",
+    "AWSMachineLearning": "6b9070686fb01226fedb8cd961601884960e51898b9922cc6b93bc686b265b87c",
+    "AWSMobileClientXCF": "ef3f65d7b833d2f259f8c70816fe1f151566a2336126883eeb8dfd10d8bc14b5",
+    "AWSPinpoint": "df17e5c7924e35431e745e9a132f3a297b9f579ea17c278cd21cc808fd1c96d5",
+    "AWSPolly": "abf45a9a60bfda70e2ef8edb7a3cfc20da6627897253dbbee1bf21de95ebae3e",
+    "AWSRekognition": "180b9315d3aa683007e0e05eb133b5fa0858d662d327972f8be27a2feaf2191a",
+    "AWSS3": "0061dd6c2340b4c1a9c310ea18731ac714bf3f89722a2c531ee0992572b269ae",
+    "AWSSageMakerRuntime": "7d146300dff63f62144c9fbd6b5e701b2408fc8d31579d1d3f9dcd77699514bd",
+    "AWSSES": "46fe14d0f5e98a94eb368b24d27476ed38343c7e7cf71b6d532237ff7337efd5",
+    "AWSSimpleDB": "f0c1c0b2319254f7eeb7d208b2fbdb1faa54e24ba19ea39dea228f93de1c9f07",
+    "AWSSNS": "12a7a1926b0a2d223769bc7274307d57f982b0c3213ee977e8bb509cdf0b3207",
+    "AWSSQS": "45448ee261397db0c47ad9b90853b2e29d24188f5273c86353501dc49a3c3f0d",
+    "AWSTextract": "ef5afcd76edd43235d81740df4adb6e6db78dd9822304933cbdde31188a14836",
+    "AWSTranscribe": "1038ea26c062d4ab66bcd33ea49d2ab5dedfdc963964c809509ffd88cb65a4cc",
+    "AWSTranscribeStreaming": "cc0ecad1a5527dbb68b58f24075c1b33ffecf8dec1213736e34349abfa3690fb",
+    "AWSTranslate": "479dc7f91657bad498564b5791f298f985f6f9e23aa81ce155f7a7e6e5460414",
+    "AWSUserPoolsSignIn": "9ff4179327b9cbf4de85d6c45b92a3250371ab98528f6a0edcce42bad3511777"
 ]
-
 
 extension Target.Dependency {
     // Framework dependencies present in the SDK
@@ -134,7 +131,6 @@ let depdenencyMap: [String: [Target.Dependency]] = [
     "AWSUserPoolsSignIn": [.awsCognitoIdentityProvider, .awsAuthCore, .awsCore]
 ]
 
-
 var frameworksOnFilesystem: [String] {
     let fileManager = FileManager.default
     let rootURL = URL(fileURLWithPath: #file).deletingLastPathComponent()
@@ -163,8 +159,9 @@ func createProducts() -> [Product] {
             if depdenencyMap[framework]!.isEmpty {
                 return Product.library(name: framework, targets: [framework])
             }
+
             // If framework has dependencies, create a `<framework>-Target`
-            // library that is used to link framework target with its dependencies
+            // library that is used to link framework target with its dependencies.
             return Product.library(name: framework, targets: ["\(framework)-Target"])
         }
     }
@@ -172,28 +169,37 @@ func createProducts() -> [Product] {
 }
 
 func createTarget(framework: String, checksum: String = "") -> Target {
-    buildMode != .remote ?
-        Target.binaryTarget(name: framework,
-                            path: "\(localPath)/\(framework).xcframework") :
-        Target.binaryTarget(name: framework,
-                            url: "\(hostingUrl)\(framework)-\(latestVersion).zip",
-                            checksum: checksum)
+    buildMode != .remote
+        ? Target.binaryTarget(
+            name: framework,
+            path: "\(localPath)/\(framework).xcframework"
+        )
+        : Target.binaryTarget(
+            name: framework,
+            url: "\(hostingUrl)\(framework)-\(latestVersion).zip",
+            checksum: checksum
+        )
 }
 
 func createTargets() -> [Target] {
     let targets: [Target]
+
     if buildMode != .remote {
         targets = frameworks.map {
             createTarget(framework: $0)
         }
     } else {
         targets = frameworksToChecksum.flatMap { framework, checksum -> [Target] in
-            var targets = [createTarget(framework: framework, checksum: checksum)]
+            var targets = [createTarget(
+                framework: framework,
+                checksum: checksum
+            )]
 
-            // If the framework has dependencies, create an additional target that links the
-            // framework and its depedencies using the previously created product.
+            // If the framework has dependencies, create an additional target
+            // that links the framework and its dependencies.
             if var dependencies = depdenencyMap[framework], !dependencies.isEmpty {
                 dependencies.append(.target(name: framework))
+
                 targets.append(
                     .target(
                         name: "\(framework)-Target",
@@ -202,9 +208,11 @@ func createTargets() -> [Target] {
                     )
                 )
             }
+
             return targets
         }
     }
+
     return targets
 }
 
